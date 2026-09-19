@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "updatedAt": "2026-09-13T12:00:00Z",
+  "sections": [
+    {
+      "id": "hero",
+      "type": "carousel",
+      "carouselId": "home-hero",
+      "displayOrder": 1,
+      "active": true
+    },
+    {
+      "id": "divider-1",
+      "type": "divider",
+      "variant": "ornament",
+      "displayOrder": 2,
+      "active": true
+    },
+    {
+      "id": "featured-categories",
+      "type": "categoryList",
+      "overline": "Collections",
+      "title": "Shop by Category",
+      "displayOrder": 3,
+      "active": true,
+      "categoryIds": ["rings", "necklaces", "earrings", "bangles", "chains"]
+    },
+    {
+      "id": "divider-2",
+      "type": "divider",
+      "variant": "line",
+      "displayOrder": 4,
+      "active": true
+    },
+    {
+      "id": "offers",
+      "type": "carousel",
+      "carouselId": "home-offers",
+      "overline": "This month",
+      "title": "Offers",
+      "displayOrder": 5,
+      "active": true
+    },
+    {
+      "id": "featured-products",
+      "type": "productList",
+      "overline": "Selected",
+      "title": "Featured",
+      "displayOrder": 6,
+      "active": true,
+      "source": { "type": "tag", "value": "featured" },
+      "limit": 10
+    },
+    {
+      "id": "divider-3",
+      "type": "divider",
+      "variant": "line",
+      "displayOrder": 7,
+      "active": true
+    },
+    {
+      "id": "new-arrivals",
+      "type": "productList",
+      "overline": "Just in",
+      "title": "New Arrivals",
+      "displayOrder": 8,
+      "active": true,
+      "source": { "type": "tag", "value": "new-arrival" },
+      "limit": 10
+    },
+    {
+      "id": "services",
+      "type": "serviceList",
+      "overline": "What we do",
+      "title": "Our Services",
+      "displayOrder": 9,
+      "active": true,
+      "serviceIds": ["custom-jewelry", "gold-exchange", "repair-polish"]
+    },
+    {
+      "id": "about",
+      "type": "about",
+      "displayOrder": 10,
+      "active": true
+    }
+  ]
+}

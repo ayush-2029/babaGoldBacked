@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-13T10:30:00Z",
+  "companyName": "Baba Gold",
+  "tagline": "Crafted in gold, worn for generations",
+  "logoUrl": "media/company/logo.png",
+  "contact": {
+    "phone": "+919876543210",
+    "phoneDisplay": "+91 98765 43210",
+    "whatsapp": "+918287794876",
+    "email": "info@babagold.com",
+    "website": "https://babagold.com"
+  },
+  "address": {
+    "line1": "2nd Floor, Shukla Market",
+    "line2": "Rajender Chowk, Gudri Road",
+    "city": "Hajipur",
+    "district": "Vaishali",
+    "state": "Bihar",
+    "country": "India",
+    "postalCode": "844101",
+    "mapUrl": "https://maps.google.com/?q=Baba%20Gold%2C%20Shukla%20Market%2C%20Rajender%20Chowk%2C%20Gudri%20Road%2C%20Hajipur%2C%20Vaishali%2C%20Bihar%20844101"
+  },
+  "businessHours": [
+    {
+      "day": "mon",
+      "open": "10:30",
+      "close": "20:00",
+      "closed": false
+    },
+    {
+      "day": "tue",
+      "open": "10:30",
+      "close": "20:00",
+      "closed": false
+    },
+    {
+      "day": "wed",
+      "open": "10:30",
+      "close": "20:00",
+      "closed": false
+    },
+    {
+      "day": "thu",
+      "open": "10:30",
+      "close": "20:00",
+      "closed": false
+    },
+    {
+      "day": "fri",
+      "open": "10:30",
+      "close": "20:00",
+      "closed": false
+    },
+    {
+      "day": "sat",
+      "open": "10:30",
+      "close": "20:00",
+      "closed": false
+    },
+    {
+      "day": "sun",
+      "open": null,
+      "close": null,
+      "closed": true
+    }
+  ],
+  "socialLinks": {
+    "instagram": "https://instagram.com/babagold",
+    "facebook": "https://facebook.com/babagold",
+    "youtube": null
+  },
+  "about": {
+    "headline": "Three generations of goldsmiths",
+    "body": "Baba Gold has served families in Indore since 1978. Every piece we sell is BIS hallmarked and crafted by artisans we have worked with for decades.",
+    "imageUrl": "https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?auto=format&fit=crop&w=900&q=75"
+  },
+  "legal": {
+    "gstin": "23AAAAA0000A1Z5",
+    "bisRegistration": "BIS-XXXXX"
+  }
+}

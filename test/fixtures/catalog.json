@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-13T06:16:17Z",
+  "categories": [
+    {
+      "id": "rings",
+      "name": "Rings",
+      "description": "Solitaires, bands and everyday gold rings",
+      "imageUrl": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=75",
+      "displayOrder": 1,
+      "active": true,
+      "products": [
+        {
+          "id": "ring-001",
+          "sku": "BG-RG-001",
+          "name": "Classic Solitaire Diamond Ring",
+          "shortDescription": "18K gold ring with a 0.5ct solitaire",
+          "description": "A timeless six-prong solitaire setting in 18K yellow gold. The centre stone is IGI certified and the shank is finished by hand.",
+          "price": {
+            "amount": 125000,
+            "currency": "INR",
+            "mrp": 138000,
+            "priceOnRequest": false
+          },
+          "metal": {
+            "type": "gold",
+            "purity": "18K",
+            "color": "yellow"
+          },
+          "weight": {
+            "gross": 4.5,
+            "net": 3.8,
+            "unit": "g"
+          },
+          "stones": [
+            {
+              "type": "diamond",
+              "carat": 0.5,
+              "clarity": "VS1",
+              "color": "F",
+              "count": 1
+            }
+          ],
+          "images": [
+            {
+              "id": "img-1",
+              "url": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Classic Solitaire Diamond Ring — Front view",
+              "isPrimary": true,
+              "displayOrder": 1
+            },
+            {
+              "id": "img-2",
+              "url": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Classic Solitaire Diamond Ring — Side profile",
+              "isPrimary": false,
+              "displayOrder": 2
+            },
+            {
+              "id": "img-3",
+              "url": "https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Classic Solitaire Diamond Ring — Three-quarter angle",
+              "isPrimary": false,
+              "displayOrder": 3
+            },
+            {
+              "id": "img-4",
+              "url": "https://images.unsplash.com/photo-1584302179602-e4c3d3fd629d?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Classic Solitaire Diamond Ring — Close-up of the setting",
+              "isPrimary": false,
+              "displayOrder": 4
+            },
+            {
+              "id": "img-5",
+              "url": "https://images.unsplash.com/photo-1620656798579-1984d9e87df7?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Classic Solitaire Diamond Ring — Worn on the hand",
+              "isPrimary": false,
+              "displayOrder": 5
+            },
+            {
+              "id": "img-6",
+              "url": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Classic Solitaire Diamond Ring — Shown against a coin for scale",
+              "isPrimary": false,
+              "displayOrder": 6
+            }
+          ],
+          "specifications": [
+            {
+              "label": "Hallmark",
+              "value": "BIS 916 / HUID"
+            },
+            {
+              "label": "Certification",
+              "value": "IGI Certified"
+            },
+            {
+              "label": "Occasion",
+              "value": "Engagement"
+            }
+          ],
+          "sizes": [
+            {
+              "value": "12",
+              "available": true
+            },
+            {
+              "value": "14",
+              "available": true
+            },
+            {
+              "value": "16",
+              "available": false
+            }
+          ],
+          "available": true,
+          "active": true,
+          "displayOrder": 1,
+          "tags": [
+            "featured",
+            "bestseller"
+          ]
+        },
+        {
+          "id": "ring-002",
+          "sku": "BG-RG-002",
+          "name": "Plain Gold Band",
+          "shortDescription": "22K comfort-fit wedding band",
+          "description": "A smooth comfort-fit band in 22K gold, suitable for daily wear.",
+          "price": {
+            "amount": 48500,
+            "currency": "INR",
+            "mrp": null,
+            "priceOnRequest": false
+          },
+          "metal": {
+            "type": "gold",
+            "purity": "22K",
+            "color": "yellow"
+          },
+          "weight": {
+            "gross": 6.2,
+            "net": 6.2,
+            "unit": "g"
+          },
+          "stones": [],
+          "images": [
+            {
+              "id": "img-1",
+              "url": "https://images.unsplash.com/photo-1596944924616-7b38e7cfac36?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Plain Gold Band — Front view",
+              "isPrimary": true,
+              "displayOrder": 1
+            },
+            {
+              "id": "img-2",
+              "url": "https://images.unsplash.com/photo-1584302179602-e4c3d3fd629d?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Plain Gold Band — Side profile",
+              "isPrimary": false,
+              "displayOrder": 2
+            },
+            {
+              "id": "img-3",
+              "url": "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Plain Gold Band — Inner band and hallmark",
+              "isPrimary": false,
+              "displayOrder": 3
+            },
+            {
+              "id": "img-4",
+              "url": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Plain Gold Band — Worn on the hand",
+              "isPrimary": false,
+              "displayOrder": 4
+            }
+          ],
+          "specifications": [
+            {
+              "label": "Hallmark",
+              "value": "BIS 916 / HUID"
+            },
+            {
+              "label": "Occasion",
+              "value": "Wedding"
+            }
+          ],
+          "sizes": [
+            {
+              "value": "14",
+              "available": true
+            },
+            {
+              "value": "16",
+              "available": true
+            },
+            {
+              "value": "18",
+              "available": true
+            }
+          ],
+          "available": true,
+          "active": true,
+          "displayOrder": 2,
+          "tags": [
+            "new-arrival"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "necklaces",
+      "name": "Necklaces",
+      "description": "Traditional and contemporary necklace sets",
+      "imageUrl": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=800&q=75",
+      "displayOrder": 2,
+      "active": true,
+      "products": [
+        {
+          "id": "necklace-001",
+          "sku": "BG-NK-001",
+          "name": "Temple Work Bridal Necklace",
+          "shortDescription": "22K antique-finish bridal necklace",
+          "description": "Hand-crafted temple motif necklace in 22K gold with an antique finish. Sold with matching earrings.",
+          "price": {
+            "amount": 0,
+            "currency": "INR",
+            "mrp": null,
+            "priceOnRequest": true
+          },
+          "metal": {
+            "type": "gold",
+            "purity": "22K",
+            "color": "yellow"
+          },
+          "weight": {
+            "gross": 68.4,
+            "net": 66.1,
+            "unit": "g"
+          },
+          "stones": [
+            {
+              "type": "ruby",
+              "carat": null,
+              "clarity": null,
+              "color": "red",
+              "count": 24
+            }
+          ],
+          "images": [
+            {
+              "id": "img-1",
+              "url": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Temple Work Bridal Necklace — Full necklace",
+              "isPrimary": true,
+              "displayOrder": 1
+            },
+            {
+              "id": "img-2",
+              "url": "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Temple Work Bridal Necklace — Close-up of the temple motif",
+              "isPrimary": false,
+              "displayOrder": 2
+            },
+            {
+              "id": "img-3",
+              "url": "https://images.unsplash.com/photo-1620656798579-1984d9e87df7?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Temple Work Bridal Necklace — Clasp and finish",
+              "isPrimary": false,
+              "displayOrder": 3
+            },
+            {
+              "id": "img-4",
+              "url": "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Temple Work Bridal Necklace — Matching earrings",
+              "isPrimary": false,
+              "displayOrder": 4
+            },
+            {
+              "id": "img-5",
+              "url": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=1000&q=75",
+              "alt": "Temple Work Bridal Necklace — Worn on model",
+              "isPrimary": false,
+              "displayOrder": 5
+            }
+          ],
+          "specifications": [
+            {
+              "label": "Hallmark",
+              "value": "BIS 916 / HUID"
+            },
+            {
+              "label": "Set Includes",
+              "value": "Necklace + Earrings"
+            },
+            {
+              "label": "Occasion",
+              "value": "Bridal"
+            }
+          ],
+          "sizes": [],
+          "available": true,
+          "active": true,
+          "displayOrder": 1,
+          "tags": [
+            "featured"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "earrings",
+      "name": "Earrings",
+      "description": "Studs, jhumkas and drops",
+      "imageUrl": "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=800&q=75",
+      "displayOrder": 3,
+      "active": true,
+      "products": []
+    },
+    {
+      "id": "bangles",
+      "name": "Bangles",
+      "description": "Gold bangles and kadas",
+      "imageUrl": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=800&q=75",
+      "displayOrder": 4,
+      "active": true,
+      "products": []
+    },
+    {
+      "id": "chains",
+      "name": "Chains",
+      "description": "Everyday and occasion chains",
+      "imageUrl": "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=800&q=75",
+      "displayOrder": 5,
+      "active": true,
+      "products": []
+    }
+  ]
+}

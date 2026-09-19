@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-16T00:00:00.000Z",
+  "commerce": {
+    "currency": "INR",
+    "currencySymbol": "₹",
+    "tax": {
+      "enabled": true,
+      "rate": 0.03,
+      "label": "GST (3%)",
+      "note": "GST on gold jewellery in India is 3%. Making charges are taxed at 5% when billed separately; that is not modelled yet."
+    },
+    "shipping": {
+      "enabled": true,
+      "flatRate": 250,
+      "freeThreshold": 25000,
+      "label": "Shipping",
+      "freeLabel": "Free"
+    },
+    "maxQuantityPerItem": 10,
+    "quoteReferencePrefix": "BG",
+    "priceOnRequestLabel": "Price on request",
+    "estimatedTotalLabel": "Estimated total",
+    "estimateDisclaimer": "Gold rates change daily. Our team confirms the final price before dispatch."
+  },
+  "search": {
+    "suggestions": [
+      "Diamond",
+      "Gold band",
+      "22K",
+      "Bridal",
+      "Solitaire",
+      "Necklace"
+    ],
+    "minQueryLength": 1,
+    "debounceMs": 250
+  },
+  "checkout": {
+    "mode": "whatsapp",
+    "assurances": [
+      "Hallmarked BIS gold",
+      "Free insured shipping over ₹25,000",
+      "Lifetime exchange"
+    ]
+  },
+  "appUpdate": {
+    "enabled": false,
+    "latestVersion": "1.0.0",
+    "minimumVersion": "1.0.0",
+    "updateType": "soft",
+    "title": "Update available",
+    "message": "A newer version of Baba Gold is available with the latest collection and fixes.",
+    "storeUrl": {
+      "android": "https://play.google.com/store/apps/details?id=com.babagold",
+      "ios": ""
+    }
+  }
+}

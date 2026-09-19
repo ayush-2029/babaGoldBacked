@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-13T10:30:00Z",
+  "services": [
+    {
+      "id": "custom-jewelry",
+      "name": "Custom Jewellery",
+      "description": "Bring us a design or an idea and our karigars will craft it for you.",
+      "imageUrl": "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=600&q=75",
+      "displayOrder": 1,
+      "active": true
+    },
+    {
+      "id": "gold-exchange",
+      "name": "Gold Exchange",
+      "description": "Exchange your old gold against new jewellery at fair, transparent rates.",
+      "imageUrl": "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=600&q=75",
+      "displayOrder": 2,
+      "active": true
+    },
+    {
+      "id": "repair-polish",
+      "name": "Repair & Polishing",
+      "description": "Restoration, resizing and polishing for all gold and diamond jewellery.",
+      "imageUrl": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=600&q=75",
+      "displayOrder": 3,
+      "active": true
+    },
+    {
+      "id": "hallmarking",
+      "name": "Hallmarking & Certification",
+      "description": "Every piece carries a BIS hallmark and HUID. Certification available on request.",
+      "imageUrl": "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=600&q=75",
+      "displayOrder": 4,
+      "active": true
+    }
+  ]
+}

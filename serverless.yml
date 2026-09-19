@@ -1,0 +1,135 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: ayush1903gupta
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: babagold
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: BabaGoldBackend
+
+stages:
+  default:
+    params:
+      bucket: baba-gold-in
+      # Prefixes keep dev and prod apart inside one bucket. Switch to separate
+      # buckets here if that split is chosen instead — nothing else changes.
+      dataPrefix: data
+  prod:
+    params:
+      dataPrefix: data
+
+provider:
+  name: aws
+  runtime: nodejs24.x
+  architecture: arm64
+  region: ap-south-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+  timeout: 15
+
+  environment:
+    STAGE: ${sls:stage}
+    DATA_BUCKET: ${param:bucket}
+    DATA_PREFIX: ${param:dataPrefix}
+
+    # Only used when MEDIA_URL_MODE is 'public' (a CDN, or a public bucket).
+    # Empty while URLs are signed.
+    MEDIA_BASE_URL: ${env:MEDIA_BASE_URL, ''}
+
+    # Image URLs are presigned per request (see services/media/mediaService).
+    # Nothing under media/ is world-readable; the bucket has no public policy.
+    MEDIA_URL_MODE: ${env:MEDIA_URL_MODE, 'signed'}
+    SIGNED_URL_TTL: ${env:SIGNED_URL_TTL, '3600'}
+    SIGNING_WINDOW: ${env:SIGNING_WINDOW, '2700'}
+
+    # Admin auth. 'token' is for building the admin panel before a user pool
+    # exists; requireAdmin refuses it outright when STAGE is production.
+    AUTH_MODE: ${env:AUTH_MODE, 'cognito'}
+
+    # The PATH to the secret, not the secret. The function fetches it from SSM
+    # at cold start, so the value never reaches this file, the CloudFormation
+    # template, the function's environment, or the deploying machine's disk —
+    # a deploy-time ${ssm:...} substitution writes it to all four.
+    # Rotate with `aws ssm put-parameter --overwrite`; no redeploy needed, the
+    # value is re-read on the next cold start.
+    ADMIN_TOKEN_SSM_PARAM: /babagold/${sls:stage}/admin-api-token
+
+    # Neither is a secret — a pool id and a public app client id both appear in
+    # the browser bundle by design. The client has no secret, because a browser
+    # cannot keep one.
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID, 'ap-south-1_AJ7ObpGIq'}
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID, '4fhls9d57meao7eopm9fvipdhh'}
+
+    # Comma-separated origin allowlist for the admin panel. Leave unset only
+    # while no panel is deployed.
+    ALLOWED_ORIGINS: ${env:ALLOWED_ORIGINS, '*'}
+
+  # Least privilege (claude.md §15). Only this bucket, only these prefixes.
+  # Never AdministratorAccess on a Lambda, and never static access keys —
+  # the function uses this execution role.
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+          Resource:
+            - arn:aws:s3:::${param:bucket}/${param:dataPrefix}/*
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+          Resource:
+            - arn:aws:s3:::${param:bucket}/media/*
+        # Needed to list media for the admin browser; scoped to this bucket.
+        - Effect: Allow
+          Action:
+            - s3:ListBucket
+          Resource:
+            - arn:aws:s3:::${param:bucket}
+          Condition:
+            StringLike:
+              s3:prefix:
+                - ${param:dataPrefix}/*
+                - media/*
+        # Read the admin shared secret at cold start. One parameter, not a path
+        # wildcard — the function has no reason to read any other.
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource:
+            - arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/babagold/${sls:stage}/admin-api-token
+        # Manage who can sign in to the portal. Scoped to this one user pool.
+        # Deliberately NOT granted: DeleteUserPool, DeleteGroup, CreateGroup —
+        # the roles are fixed, and the pool is not the application's to destroy.
+        - Effect: Allow
+          Action:
+            - cognito-idp:ListUsers
+            - cognito-idp:ListUsersInGroup
+            - cognito-idp:AdminGetUser
+            - cognito-idp:AdminCreateUser
+            - cognito-idp:AdminDeleteUser
+            - cognito-idp:AdminEnableUser
+            - cognito-idp:AdminDisableUser
+            - cognito-idp:AdminSetUserPassword
+            - cognito-idp:AdminAddUserToGroup
+            - cognito-idp:AdminRemoveUserFromGroup
+            - cognito-idp:AdminListGroupsForUser
+            - cognito-idp:AdminUserGlobalSignOut
+          Resource:
+            - arn:aws:cognito-idp:${aws:region}:${aws:accountId}:userpool/${env:COGNITO_USER_POOL_ID, 'ap-south-1_AJ7ObpGIq'}
+
+functions:
+  api:
+    handler: handler.handler
+    description: BabaGold public storefront API and admin write API
+    events:
+      - httpApi: "*"
+
+package:
+  patterns:
+    - "!test/**"
+    - "!.serverless/**"
+    - "!API_CONTRACT.md"
+    - "!README.md"
+    - "!local.js"
