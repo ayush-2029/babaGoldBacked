@@ -1,0 +1,134 @@
+name: Deploy to PRODUCTION
+
+# ---------------------------------------------------------------------------
+# THIS NEVER RUNS BY ITSELF. It never will.
+#
+# `workflow_dispatch` is the ONLY trigger, deliberately. There is no `push`,
+# no `schedule`, no `pull_request`, no `workflow_run`, no `release`. Merging to
+# main does not deploy. Nothing deploys except a person pressing the button and
+# typing the confirmation below.
+#
+# If you are ever tempted to add an automatic trigger here: don't. This stage
+# is what customers' phones talk to.
+# ---------------------------------------------------------------------------
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy prod" exactly, to confirm this is production'
+        required: true
+        default: ""
+      reason:
+        description: "What is being released (shows in the run list)"
+        required: true
+        default: ""
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Mapped to env deliberately: the `secrets` context is NOT available in a
+      # step-level `if:` — only `env` is. Testing `secrets.X != ''` directly in
+      # the conditions below would never match, and both credential steps would
+      # be skipped, leaving the deploy to fail with no obvious cause.
+      AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+    # Add required reviewers to this environment in
+    #   Settings -> Environments -> production
+    # and GitHub will hold the run until it is approved, on top of the typed
+    # confirmation. That is the second pair of eyes; the checks below are only
+    # the first.
+    environment: production
+    steps:
+      - name: Require the typed confirmation
+        # Guards the one-click mistake: picking "Deploy to PRODUCTION" from the
+        # list when you meant dev. Typing the words is the moment you notice.
+        if: ${{ github.event.inputs.confirm != 'deploy prod' }}
+        run: |
+          echo "::error::Confirmation did not match. Type exactly: deploy prod"
+          exit 1
+
+      - name: Refuse anything that is not main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Production deploys run from main only. This ref is ${{ github.ref }}."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run the tests first
+        run: npm test
+
+      - name: AWS credentials (OIDC)
+        if: ${{ env.AWS_DEPLOY_ROLE_ARN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-south-1
+
+      - name: AWS credentials (access keys)
+        # Long-lived credentials in GitHub. Prefer the OIDC role above.
+        if: ${{ env.AWS_DEPLOY_ROLE_ARN == '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Deploy
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: npx serverless deploy --stage prod
+
+      - name: Check it came up, and that it is really production
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          URL=$(npx serverless info --stage prod --verbose \
+            | grep -oE 'https://[a-z0-9]+\.execute-api\.[a-z0-9-]+\.amazonaws\.com' \
+            | head -1)
+          echo "endpoint: $URL"
+          test -n "$URL"
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/v1/health")
+          echo "health: $code"
+          test "$code" = "200"
+
+          # The expensive failure is a prod stage quietly serving dev data, so
+          # this is checked rather than assumed. APP_ENV defaults to "dev" when
+          # unset, which means a params mistake fails THIS way, not silently.
+          env_reported=$(aws lambda get-function-configuration \
+            --function-name BabaGoldBackend-prod-api --region ap-south-1 \
+            --query 'Environment.Variables.APP_ENV' --output text)
+          prefix=$(aws lambda get-function-configuration \
+            --function-name BabaGoldBackend-prod-api --region ap-south-1 \
+            --query 'Environment.Variables.DATA_PREFIX' --output text)
+          echo "APP_ENV: $env_reported / DATA_PREFIX: $prefix"
+
+          if [ "$env_reported" != "prod" ] || [ "$prefix" != "prod/data" ]; then
+            echo "::error::Production came up reading $prefix (APP_ENV=$env_reported). It must be prod/data."
+            exit 1
+          fi
+
+          echo "### Deployed to PRODUCTION :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- endpoint: $URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- reads: \`s3://baba-gold-in/prod/\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- released by: @${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- reason: ${{ github.event.inputs.reason }}" >> "$GITHUB_STEP_SUMMARY"
