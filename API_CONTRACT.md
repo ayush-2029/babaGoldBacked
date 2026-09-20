@@ -175,6 +175,27 @@ costs nothing extra server-side. The app keeps the four separate repository
 methods regardless, so this is purely an optimisation the data layer can adopt
 or ignore.
 
+### Operator notice (not in the panel)
+
+| Method | Path | Returns | App caller |
+| --- | --- | --- | --- |
+| GET | `/notice` | `{ enabled, mode, id, title, message, contact }` | on every launch |
+
+**This is the one document with no admin route and no screen.** It is edited by
+hand in `s3://baba-gold-in/data/notice.json` so it stays with whoever holds the
+AWS account, independently of the panel — which is the point: it is the lever
+that still works when the panel does not, or is in someone else’s hands.
+
+`mode` is the whole difference. `"message"` shows a full-screen notice the
+customer can close; `"block"` shows it and nothing else, with no way past. Any
+value that is not exactly `"block"` degrades to `"message"`, and a notice with
+no `message`, or without `enabled: true` exactly, is ignored entirely — a typo
+in a hand-edited file must never take a shop down.
+
+Served `no-store` and deliberately absent from `/bootstrap`: both are caches,
+and a block that takes minutes to lift is worse than no block at all.
+
+**Do not add this to the admin router, the panel, or any "all documents" list.**
 ### Catalog
 
 | Method | Path | Returns | App caller |

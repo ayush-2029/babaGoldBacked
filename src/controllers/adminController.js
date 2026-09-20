@@ -217,7 +217,7 @@ const putCommerce = async (req, res) =>
 const getCompany = async (req, res) => send(res, await content.getDocument("company"));
 
 const putCompany = async (req, res) =>
-  send(res, await content.putDocument("company", req.body, req.ifMatch));
+  send(res, await content.updateCompany(req.body, req.ifMatch));
 
 const listServices = async (req, res) => send(res, await content.listServices());
 

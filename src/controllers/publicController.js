@@ -2,6 +2,7 @@
 
 const catalogService = require("../services/catalog/catalogService");
 const contentService = require("../services/content/contentService");
+const noticeService = require("../services/content/noticeService");
 const { ok, notModified } = require("../utils/envelope");
 const { deliverMedia } = require("../services/media/mediaService");
 const config = require("../config");
@@ -55,6 +56,21 @@ const storefront = async (req, res) => serve(req, res, await contentService.getS
 const settings = async (req, res) => serve(req, res, await contentService.getSettings());
 const bootstrap = async (req, res) => serve(req, res, await contentService.getBootstrap());
 
+/**
+ * GET /notice — the operator notice the app checks on launch.
+ *
+ * Served raw rather than through serve(): it carries no media to sign, and it
+ * must not be cached. A notice exists to be acted on now, and a block that
+ * takes minutes to lift is worse than no block at all.
+ *
+ * Deliberately absent from /bootstrap and from every admin route.
+ */
+const notice = async (req, res) => {
+  const { data } = await noticeService.getNotice();
+  res.set("Cache-Control", "no-store");
+  return ok(res, data);
+};
+
 const categories = async (req, res) =>
   serve(req, res, await catalogService.getCategories());
 
@@ -92,6 +108,7 @@ module.exports = {
   storefront,
   settings,
   bootstrap,
+  notice,
   categories,
   category,
   categoryProducts,

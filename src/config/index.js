@@ -39,6 +39,11 @@ const config = {
     home: "home.json",
     storefront: "storefront.json",
     settings: "settings.json",
+    /*
+     * The operator notice. Hand-edited in the bucket, never written by the
+     * API and never exposed through the admin router — see noticeService.
+     */
+    notice: "notice.json",
   },
 
   /**
