@@ -1,0 +1,115 @@
+name: Deploy to dev
+
+# Manual only. Nothing deploys because a commit landed — a merge to main is a
+# decision to release the CODE for review, not a decision to push it at an
+# environment. Ayush presses the button.
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "What is being deployed (shows in the run list)"
+        required: false
+        default: "manual deploy"
+
+# Two deploys of the same stage at once would race on the same CloudFormation
+# stack. Queue them instead, and never cancel one in flight — a half-applied
+# stack update is worse than waiting.
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write # for AWS OIDC; harmless when access keys are used instead
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Mapped to env deliberately: the `secrets` context is NOT available in a
+      # step-level `if:` — only `env` is. Testing `secrets.X != ''` directly in
+      # the conditions below would never match, and both credential steps would
+      # be skipped, leaving the deploy to fail with no obvious cause.
+      AWS_DEPLOY_ROLE_ARN: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+    environment: dev
+    steps:
+      - name: Refuse anything that is not main
+        # workflow_dispatch lets you pick any branch in the UI. Deploying a
+        # feature branch straight to a shared environment is exactly what the
+        # branch rule exists to prevent, so it is blocked here rather than left
+        # to whoever is clicking.
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Deploys run from main only. This ref is ${{ github.ref }}."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run the tests first
+        # A deploy that fails its own test suite should never reach an
+        # environment, even a disposable one — dev is where the panel and the
+        # pilot app are pointed.
+        run: npm test
+
+      - name: AWS credentials (OIDC)
+        if: ${{ env.AWS_DEPLOY_ROLE_ARN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-south-1
+
+      - name: AWS credentials (access keys)
+        # Fallback for before OIDC is set up. Prefer the role above: these are
+        # long-lived credentials with deploy rights sitting in GitHub.
+        if: ${{ env.AWS_DEPLOY_ROLE_ARN == '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Deploy
+        env:
+          # Serverless Framework v4 needs this because serverless.yml declares
+          # org/app. Without it the CLI tries to log in and the job hangs.
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: npx serverless deploy --stage dev
+
+      - name: Check it actually came up
+        # A green deploy step only means CloudFormation succeeded. This asks
+        # the running service whether it works, and which data it is reading.
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          URL=$(npx serverless info --stage dev --verbose \
+            | grep -oE 'https://[a-z0-9]+\.execute-api\.[a-z0-9-]+\.amazonaws\.com' \
+            | head -1)
+          echo "endpoint: $URL"
+          test -n "$URL"
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/v1/health")
+          echo "health: $code"
+          test "$code" = "200"
+
+          env_reported=$(aws lambda get-function-configuration \
+            --function-name BabaGoldBackend-dev-api --region ap-south-1 \
+            --query 'Environment.Variables.APP_ENV' --output text)
+          echo "APP_ENV: $env_reported"
+          if [ "$env_reported" != "dev" ]; then
+            echo "::error::dev stage came up with APP_ENV=$env_reported — it must be dev."
+            exit 1
+          fi
+
+          echo "### Deployed to dev :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- endpoint: $URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- reads: \`s3://baba-gold-in/dev/\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- commit: ${{ github.sha }}" >> "$GITHUB_STEP_SUMMARY"
