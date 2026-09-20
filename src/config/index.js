@@ -18,6 +18,22 @@ const required = (name, fallback) => {
 
 const STAGE = process.env.STAGE || "dev";
 
+/**
+ * Which set of data this service is talking to: "prod" or "dev".
+ *
+ * One bucket, two root folders. Everything the service reads or writes lives
+ * under `prod/` or `dev/`, so a panel running on a laptop cannot touch what
+ * the shop's customers are seeing — which it could, and did, when both used
+ * the same `data/` and `media/` prefixes.
+ *
+ * THE DEFAULT IS "dev", AND MUST STAY THAT WAY. Someone running this locally
+ * with no configuration should reach the environment where mistakes are free.
+ * Production is opt-in: the deployed prod stage sets APP_ENV explicitly, and
+ * its IAM role is scoped so a dev deployment physically cannot write there.
+ */
+const APP_ENV =
+  (process.env.APP_ENV || "dev").trim().toLowerCase() === "prod" ? "prod" : "dev";
+
 const config = {
   stage: STAGE,
   isProduction: STAGE === "prod" || STAGE === "production",
@@ -29,7 +45,11 @@ const config = {
    * split — see the environments question in API_CONTRACT.md §7.
    */
   bucket: required("DATA_BUCKET", "baba-gold-in"),
-  dataPrefix: process.env.DATA_PREFIX || "data",
+
+  /** "prod" or "dev" — the root folder everything else hangs off. */
+  appEnv: APP_ENV,
+
+  dataPrefix: process.env.DATA_PREFIX || `${APP_ENV}/data`,
 
   /** Object keys, relative to dataPrefix. The app never learns these names. */
   keys: {
@@ -110,5 +130,27 @@ const config = {
 
 /** Full S3 key for one of the data documents. */
 config.dataKey = (name) => `${config.dataPrefix}/${config.keys[name]}`;
+
+/**
+ * Media keys are stored WITHOUT the environment, and gain it only here.
+ *
+ * catalog.json holds "media/products/ring-001/front.webp"; the object actually
+ * lives at "prod/media/products/ring-001/front.webp". Keeping the stored form
+ * environment-agnostic is what makes a document portable: prod data can be
+ * copied to dev verbatim and every image still resolves, and nothing has to be
+ * rewritten when an environment is added or renamed.
+ *
+ * Everything that touches S3 goes through these two functions.
+ */
+config.mediaObjectKey = (relativeKey) =>
+  relativeKey.startsWith(`${config.appEnv}/`)
+    ? relativeKey
+    : `${config.appEnv}/${relativeKey}`;
+
+/** The inverse: what gets written back into a document. */
+config.mediaRelativeKey = (objectKey) =>
+  objectKey.startsWith(`${config.appEnv}/`)
+    ? objectKey.slice(config.appEnv.length + 1)
+    : objectKey;
 
 module.exports = config;

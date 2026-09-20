@@ -74,7 +74,8 @@ async function signMediaKey(key, window) {
 
   const pending = getSignedUrl(
     s3(),
-    new GetObjectCommand({ Bucket: config.bucket, Key: key }),
+    // The stored key is environment-agnostic; the object is not.
+    new GetObjectCommand({ Bucket: config.bucket, Key: config.mediaObjectKey(key) }),
     { expiresIn: config.media.signedUrlTtlSeconds, signingDate: window.signingDate },
   );
 
@@ -229,9 +230,18 @@ function toStorageKey(value) {
   // Path-style URLs carry the bucket as the first segment; virtual-hosted
   // style does not.
   const path = decodeURIComponent(url.pathname).replace(/^\/+/, "");
-  return path.startsWith(`${config.bucket}/`)
+  const withoutBucket = path.startsWith(`${config.bucket}/`)
     ? path.slice(config.bucket.length + 1)
     : path;
+
+  /*
+   * And drop the environment folder.
+   *
+   * A signed URL points at "prod/media/…", but documents must store
+   * "media/…" — an environment baked into the data would follow a copy of
+   * prod into dev and quietly send it back to production's images.
+   */
+  return config.mediaRelativeKey(withoutBucket);
 }
 
 /** Walks a payload applying toStorageKey to every media reference. */
