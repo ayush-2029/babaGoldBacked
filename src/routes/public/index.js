@@ -21,6 +21,13 @@ router.get("/storefront", asyncRoute(controller.storefront));
 router.get("/settings", asyncRoute(controller.settings));
 router.get("/bootstrap", asyncRoute(controller.bootstrap));
 
+/*
+ * The operator notice. Read-only, public, and intentionally the only document
+ * with no matching admin route — it is edited by hand in the bucket so it
+ * stays in the account holder's control, independent of the panel.
+ */
+router.get("/notice", asyncRoute(controller.notice));
+
 // Catalog
 router.get("/categories", asyncRoute(controller.categories));
 router.get(

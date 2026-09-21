@@ -6,6 +6,7 @@ const {
 } = require("../../repositories/jsonRepository");
 const { ApiError, validation } = require("../../utils/errors");
 const { validateSettingsInput } = require("../content/settingsSchema");
+const { validateCompanyInput } = require("../content/companySchema");
 const { normalizeStoredMedia } = require("../media/mediaService");
 
 /**
@@ -51,6 +52,17 @@ async function putDocument(name, input, ifMatch, validate) {
   // declare the document is a shape it is not.
   const next = { ...input, schemaVersion: current.schemaVersion };
   return save(name, next, ifMatch);
+}
+
+/**
+ * The shop's own details.
+ *
+ * Validated because of `assurances` — the trust row on the app's Profile
+ * screen. Its icons have to be ones the app actually bundles, so an unknown
+ * name is refused here rather than silently rendering a gap on a phone.
+ */
+async function updateCompany(input, ifMatch) {
+  return putDocument("company", input, ifMatch, validateCompanyInput);
 }
 
 // ------------------------------------------------------------------- settings
@@ -292,6 +304,7 @@ async function reorderHomeSections(ids, ifMatch) {
 module.exports = {
   getDocument,
   putDocument,
+  updateCompany,
   updateSettings,
   updateCommerce,
   listServices,
