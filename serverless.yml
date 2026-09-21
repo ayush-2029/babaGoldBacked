@@ -6,15 +6,21 @@ app: babagold
 service: BabaGoldBackend
 
 stages:
+  # One bucket, one root folder per environment: s3://<bucket>/dev/ and
+  # s3://<bucket>/prod/. Everything a stage reads or writes lives under its own
+  # root, and the IAM policy below is scoped to it — so a dev deployment cannot
+  # write production data even by mistake, which is the actual guarantee wanted
+  # here rather than a convention everyone has to remember.
   default:
     params:
       bucket: baba-gold-in
-      # Prefixes keep dev and prod apart inside one bucket. Switch to separate
-      # buckets here if that split is chosen instead — nothing else changes.
-      dataPrefix: data
+      appEnv: dev
+      envRoot: dev
   prod:
     params:
-      dataPrefix: data
+      bucket: baba-gold-in
+      appEnv: prod
+      envRoot: prod
 
 provider:
   name: aws
@@ -28,7 +34,10 @@ provider:
   environment:
     STAGE: ${sls:stage}
     DATA_BUCKET: ${param:bucket}
-    DATA_PREFIX: ${param:dataPrefix}
+    # Which root folder this deployment owns. The service defaults to "dev"
+    # when this is unset, so a misconfiguration lands somewhere harmless.
+    APP_ENV: ${param:appEnv}
+    DATA_PREFIX: ${param:envRoot}/data
 
     # Only used when MEDIA_URL_MODE is 'public' (a CDN, or a public bucket).
     # Empty while URLs are signed.
@@ -73,14 +82,14 @@ provider:
             - s3:GetObject
             - s3:PutObject
           Resource:
-            - arn:aws:s3:::${param:bucket}/${param:dataPrefix}/*
+            - arn:aws:s3:::${param:bucket}/${param:envRoot}/data/*
         - Effect: Allow
           Action:
             - s3:GetObject
             - s3:PutObject
             - s3:DeleteObject
           Resource:
-            - arn:aws:s3:::${param:bucket}/media/*
+            - arn:aws:s3:::${param:bucket}/${param:envRoot}/media/*
         # Needed to list media for the admin browser; scoped to this bucket.
         - Effect: Allow
           Action:
@@ -90,8 +99,8 @@ provider:
           Condition:
             StringLike:
               s3:prefix:
-                - ${param:dataPrefix}/*
-                - media/*
+                - ${param:envRoot}/data/*
+                - ${param:envRoot}/media/*
         # Read the admin shared secret at cold start. One parameter, not a path
         # wildcard — the function has no reason to read any other.
         - Effect: Allow

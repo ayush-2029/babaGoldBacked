@@ -86,7 +86,7 @@ async function createUploadUrl({ scope, ownerId, contentType, fileSize }) {
 
   const command = new PutObjectCommand({
     Bucket: config.bucket,
-    Key: key,
+    Key: config.mediaObjectKey(key),
     ContentType: contentType,
     ContentLength: fileSize,
   });
@@ -123,7 +123,7 @@ async function readMagicBytes(key, length) {
   const response = await s3().send(
     new GetObjectCommand({
       Bucket: config.bucket,
-      Key: key,
+      Key: config.mediaObjectKey(key),
       Range: `bytes=0-${length - 1}`,
     }),
   );
@@ -154,7 +154,7 @@ async function confirmUpload({ key }) {
   let head;
   try {
     head = await s3().send(
-      new HeadObjectCommand({ Bucket: config.bucket, Key: key }),
+      new HeadObjectCommand({ Bucket: config.bucket, Key: config.mediaObjectKey(key) }),
     );
   } catch (error) {
     if (error.$metadata?.httpStatusCode === 404 || error.name === "NotFound") {
@@ -165,7 +165,7 @@ async function confirmUpload({ key }) {
 
   const reject = async (error) => {
     await s3()
-      .send(new DeleteObjectCommand({ Bucket: config.bucket, Key: key }))
+      .send(new DeleteObjectCommand({ Bucket: config.bucket, Key: config.mediaObjectKey(key) }))
       .catch(() => {
         // Best effort. The object is unreferenced either way; a failed cleanup
         // is a housekeeping problem, not a correctness one.
@@ -225,7 +225,9 @@ async function deleteMedia(key) {
   if (typeof key !== "string" || !key.startsWith("media/")) {
     throw validation("key must be a media key.");
   }
-  await s3().send(new DeleteObjectCommand({ Bucket: config.bucket, Key: key }));
+  await s3().send(
+    new DeleteObjectCommand({ Bucket: config.bucket, Key: config.mediaObjectKey(key) }),
+  );
   return { key, deleted: true };
 }
 
@@ -237,15 +239,17 @@ async function listMedia({ prefix = "media/", cursor } = {}) {
   const response = await s3().send(
     new ListObjectsV2Command({
       Bucket: config.bucket,
-      Prefix: prefix,
+      // Listing is the one place the environment is visible to S3 but must
+      // not leak back out — the keys are stripped again below.
+      Prefix: config.mediaObjectKey(prefix),
       MaxKeys: 100,
       ContinuationToken: cursor || undefined,
     }),
   );
   return {
     items: (response.Contents ?? []).map((object) => ({
-      key: object.Key,
-      url: resolveMediaUrl(object.Key),
+      key: config.mediaRelativeKey(object.Key),
+      url: resolveMediaUrl(config.mediaRelativeKey(object.Key)),
       bytes: object.Size,
       updatedAt: object.LastModified,
     })),

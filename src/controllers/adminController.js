@@ -1,5 +1,6 @@
 "use strict";
 
+const config = require("../config");
 const catalog = require("../services/admin/catalogAdminService");
 const content = require("../services/admin/contentAdminService");
 const media = require("../services/media/uploadService");
@@ -23,7 +24,16 @@ const send = async (res, { data, version }, status = 200) => {
 /** Arrays cannot carry a version field, so they get a named property. */
 const wrap = (data) => (Array.isArray(data) ? { items: data } : data);
 
-const me = (req, res) => ok(res, req.admin);
+/**
+ * Who is signed in, and WHICH ENVIRONMENT they are signed in to.
+ *
+ * The panel knows its environment from a build-time variable, which can be
+ * set wrong — and a panel that wrongly believes it is in dev is the expensive
+ * mistake. This is the server stating what it actually reads, so the warning
+ * the administrator sees comes from the thing that owns the data rather than
+ * from a flag someone typed.
+ */
+const me = (req, res) => ok(res, { ...req.admin, appEnv: config.appEnv });
 
 // ---------------------------------------------------------------- categories
 
