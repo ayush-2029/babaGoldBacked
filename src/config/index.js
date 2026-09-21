@@ -36,7 +36,20 @@ const APP_ENV =
 
 const config = {
   stage: STAGE,
-  isProduction: STAGE === "prod" || STAGE === "production",
+
+  /**
+   * Whether this deployment must behave as production.
+   *
+   * TRUE IF EITHER the stage or the data root says so. It used to check only
+   * the stage, which left a gap once APP_ENV arrived: a deployment named
+   * "dev" pointed at APP_ENV=prod would serve production data while still
+   * accepting the shared-secret admin bypass, because the bypass is refused on
+   * `isProduction` alone.
+   *
+   * Reading production data IS being production, whatever the stage is called.
+   */
+  isProduction:
+    STAGE === "prod" || STAGE === "production" || APP_ENV === "prod",
   region: process.env.AWS_REGION || "ap-south-1",
 
   /**
