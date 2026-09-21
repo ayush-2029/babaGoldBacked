@@ -85,13 +85,20 @@ jobs:
       - name: Check it actually came up
         # A green deploy step only means CloudFormation succeeded. This asks
         # the running service whether it works, and which data it is reading.
-        env:
-          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
           set -euo pipefail
-          URL=$(npx serverless info --stage dev --verbose \
-            | grep -oE 'https://[a-z0-9]+\.execute-api\.[a-z0-9-]+\.amazonaws\.com' \
-            | head -1)
+
+          # The URL comes from the CloudFormation stack output, NOT from
+          # parsing `serverless info`. That is what broke the first run: v4
+          # writes its human-readable output to stderr, so $( ) captured
+          # nothing, grep matched nothing, and under `set -e` with `pipefail`
+          # the script died on this line before printing anything — a green
+          # deploy reported as a failure. This is structured, on stdout, and
+          # needs no Serverless credentials.
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name BabaGoldBackend-dev --region ap-south-1 \
+            --query "Stacks[0].Outputs[?OutputKey=='HttpApiUrl'].OutputValue" \
+            --output text)
           echo "endpoint: $URL"
           test -n "$URL"
 

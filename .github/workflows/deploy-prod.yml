@@ -95,13 +95,18 @@ jobs:
         run: npx serverless deploy --stage prod
 
       - name: Check it came up, and that it is really production
-        env:
-          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
           set -euo pipefail
-          URL=$(npx serverless info --stage prod --verbose \
-            | grep -oE 'https://[a-z0-9]+\.execute-api\.[a-z0-9-]+\.amazonaws\.com' \
-            | head -1)
+
+          # From the CloudFormation stack output, NOT by parsing
+          # `serverless info` — v4 writes that to stderr, so $( ) captures
+          # nothing and the script dies here under `set -e` with `pipefail`,
+          # reporting a successful deploy as a failure. Structured output, on
+          # stdout, no Serverless credentials needed.
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name BabaGoldBackend-prod --region ap-south-1 \
+            --query "Stacks[0].Outputs[?OutputKey=='HttpApiUrl'].OutputValue" \
+            --output text)
           echo "endpoint: $URL"
           test -n "$URL"
 
