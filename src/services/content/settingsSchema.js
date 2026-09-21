@@ -75,6 +75,42 @@ function collectProblems(settings) {
     );
   }
 
+  /*
+   * The short promises shown beside the empty cart and at checkout.
+   *
+   * `showAssurances` is the on/off switch, checked for TYPE only — absent
+   * means shown, so every settings.json already in a bucket keeps working
+   * without a migration.
+   */
+  if (settings.checkout !== undefined) {
+    const list = settings.checkout?.assurances;
+    if (list !== undefined) {
+      require_(Array.isArray(list), "checkout.assurances must be an array");
+      if (Array.isArray(list)) {
+        require_(
+          list.every((a) => typeof a === "string" && a.trim().length > 0),
+          "checkout.assurances must all be non-empty text",
+        );
+        // The app lays these out in one row; past six they stop being short
+        // promises and start being a paragraph.
+        require_(
+          list.length <= 6,
+          "checkout.assurances cannot have more than 6 items",
+        );
+        require_(
+          list.every((a) => typeof a !== "string" || a.length <= 40),
+          "each checkout assurance must be 40 characters or fewer",
+        );
+      }
+    }
+    if (settings.checkout?.showAssurances !== undefined) {
+      require_(
+        typeof settings.checkout.showAssurances === "boolean",
+        "checkout.showAssurances must be true or false",
+      );
+    }
+  }
+
   problems.push(...checkAppUpdate(settings.appUpdate));
 
   return problems;
