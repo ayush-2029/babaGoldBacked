@@ -117,3 +117,30 @@ describe("checkout.cartNote", () => {
     assert.match(problemsFor({ cartNote: 5 })[0], /must be text/);
   });
 });
+
+/**
+ * The version line on Profile.
+ *
+ * Absent means shown, like every other switch, so a settings.json already in
+ * the bucket keeps behaving as it does.
+ */
+describe("profile.showVersion", () => {
+  const problemsFor = (profile) => collectProblems({ ...base(), profile });
+
+  test("absent is fine — no document in the bucket has it", () => {
+    assert.deepEqual(collectProblems(base()), []);
+  });
+
+  test("accepts either setting", () => {
+    assert.deepEqual(problemsFor({ showVersion: true }), []);
+    assert.deepEqual(problemsFor({ showVersion: false }), []);
+  });
+
+  test("rejects a string, which is how a checkbox gets saved wrong", () => {
+    assert.match(problemsFor({ showVersion: "false" })[0], /must be true or false/);
+  });
+
+  test("rejects a profile that is not an object", () => {
+    assert.match(collectProblems({ ...base(), profile: "yes" })[0], /must be an object/);
+  });
+});

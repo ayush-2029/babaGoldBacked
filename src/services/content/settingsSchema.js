@@ -129,6 +129,32 @@ function collectProblems(settings) {
     }
   }
 
+  /*
+   * The version line on the app's Profile screen.
+   *
+   * ABSENT MEANS SHOWN, like every other switch here, so no settings.json
+   * already in a bucket changes behaviour.
+   *
+   * Worth knowing what this does NOT hide, because the app deliberately
+   * overrides it in two cases: a build talking to a non-production API always
+   * shows the line (that marker is how a stakeholder APK is told apart from a
+   * Play Store one), and an available update always shows, because that row is
+   * the soft-update prompt and hiding it would quietly disable updates.
+   */
+  if (settings.profile !== undefined) {
+    require_(
+      settings.profile !== null && typeof settings.profile === "object" &&
+        !Array.isArray(settings.profile),
+      "profile must be an object",
+    );
+    if (settings.profile?.showVersion !== undefined) {
+      require_(
+        typeof settings.profile.showVersion === "boolean",
+        "profile.showVersion must be true or false",
+      );
+    }
+  }
+
   problems.push(...checkAppUpdate(settings.appUpdate));
 
   return problems;
