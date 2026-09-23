@@ -79,3 +79,41 @@ describe("checkout assurances", () => {
     assert.deepEqual(problemsFor({ assurances: ["x".repeat(40)] }), []);
   });
 });
+
+/**
+ * The single line under the cart total.
+ *
+ * Empty is the off switch — there is deliberately no separate boolean, so the
+ * text and its visibility cannot drift apart.
+ */
+describe("checkout.cartNote", () => {
+  const problemsFor = (checkout) => collectProblems(withCheckout(checkout));
+
+  test("absent is fine — documents already in the bucket have no cartNote", () => {
+    assert.deepEqual(problemsFor({}), []);
+  });
+
+  test("empty or null means the line is simply not shown", () => {
+    assert.deepEqual(problemsFor({ cartNote: "" }), []);
+    assert.deepEqual(problemsFor({ cartNote: null }), []);
+  });
+
+  test("accepts the line the app used to hardcode", () => {
+    assert.deepEqual(
+      problemsFor({ cartNote: "BIS hallmarked · Final price confirmed before billing" }),
+      [],
+    );
+  });
+
+  test("rejects a line too long for one row under the total", () => {
+    assert.match(
+      problemsFor({ cartNote: "x".repeat(81) })[0],
+      /80 characters or fewer/,
+    );
+    assert.deepEqual(problemsFor({ cartNote: "x".repeat(80) }), []);
+  });
+
+  test("rejects a non-string", () => {
+    assert.match(problemsFor({ cartNote: 5 })[0], /must be text/);
+  });
+});

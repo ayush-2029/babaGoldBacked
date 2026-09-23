@@ -5,9 +5,14 @@ const { validation } = require("../../utils/errors");
 /**
  * Validation for the parts of company.json the panel can edit freely.
  *
- * Only `assurances` is checked here — the trust row on the app's Profile
- * screen ("BIS hallmarked", "Certified diamonds", …), which used to be four
- * hardcoded items in the app and is now shop-editable.
+ * Three things are checked here, and they are the ones where a bad value
+ * silently does nothing in the app rather than looking wrong:
+ *
+ *   assurances  — the trust row on the app's Profile screen ("BIS hallmarked",
+ *                 "Certified diamonds", …), once four hardcoded items.
+ *   socialLinks — the Follow us row. A link with no scheme opens nothing.
+ *   footerNote  — the single line under the Profile footer, also once
+ *                 hardcoded, and a claim only the shop can stand behind.
  *
  * The rest of the document is prose and contact details; there is nothing to
  * be strict about, and refusing a write because a tagline looked odd would
@@ -44,6 +49,130 @@ const ASSURANCE_ICONS = [
 ];
 
 const MAX_ASSURANCES = 8;
+
+/**
+ * Social links.
+ *
+ * Stored as a map of platform to link, because that is the shape already in
+ * every company.json in the bucket:
+ *
+ *   "socialLinks": { "instagram": "https://…", "youtube": null }
+ *
+ * A link may ALSO be written as `{ url, active }`. That exists so the panel
+ * can switch a link off without throwing the address away — the alternative
+ * is asking the shop to delete their Instagram URL to hide the button and
+ * paste it back to show it again, which is how URLs get lost.
+ *
+ * The platform key is not checked against a list. The app renders whatever
+ * keys it is given, titled from the key itself, so a shop that opens a
+ * Pinterest account should not have to wait for an app release.
+ */
+const MAX_SOCIAL_LINKS = 8;
+const SOCIAL_KEY = /^[a-z][a-z0-9]{1,19}$/;
+const MAX_SOCIAL_URL = 300;
+
+/**
+ * @param {unknown} links
+ * @returns {string[]} problems, empty when valid
+ */
+function collectSocialProblems(links) {
+  const problems = [];
+
+  if (links === undefined || links === null) {
+    return problems;
+  }
+
+  if (typeof links !== "object" || Array.isArray(links)) {
+    problems.push("socialLinks must be an object");
+    return problems;
+  }
+
+  const keys = Object.keys(links);
+  if (keys.length > MAX_SOCIAL_LINKS) {
+    problems.push(`socialLinks cannot have more than ${MAX_SOCIAL_LINKS} entries`);
+  }
+
+  keys.forEach((key) => {
+    const at = `socialLinks.${key}`;
+
+    if (!SOCIAL_KEY.test(key)) {
+      problems.push(`${at} must be lowercase letters and numbers`);
+    }
+
+    const value = links[key];
+
+    // An empty slot is how a link is left unset. Keeping the key is useful —
+    // it is what lets the panel show a blank Instagram row to fill in.
+    if (value === null || value === undefined || value === "") {
+      return;
+    }
+
+    let url = value;
+
+    if (typeof value === "object" && !Array.isArray(value)) {
+      url = value.url;
+      if (value.active !== undefined && typeof value.active !== "boolean") {
+        problems.push(`${at}.active must be true or false`);
+      }
+      if (url === null || url === undefined || url === "") {
+        // Switched off and never filled in. Nothing to check.
+        return;
+      }
+    } else if (typeof value !== "string") {
+      problems.push(`${at} must be a web address`);
+      return;
+    }
+
+    if (typeof url !== "string") {
+      problems.push(`${at} must be a web address`);
+      return;
+    }
+
+    const trimmed = url.trim();
+    if (trimmed.length > MAX_SOCIAL_URL) {
+      problems.push(`${at} must be ${MAX_SOCIAL_URL} characters or fewer`);
+    }
+    // Without a scheme the app hands the phone something it cannot open, and
+    // the button silently does nothing.
+    if (!/^https?:\/\/\S+$/i.test(trimmed)) {
+      problems.push(`${at} must start with http:// or https:// and contain no spaces`);
+    }
+  });
+
+  return problems;
+}
+
+/**
+ * The single line under the Profile screen's footer.
+ *
+ * Was hardcoded in the app as "Every piece BIS hallmarked with a HUID" — a
+ * claim only the shop can know is true, in the one place the shop could not
+ * edit. Empty means the line is not shown.
+ */
+const MAX_FOOTER_NOTE = 80;
+
+/**
+ * @param {unknown} note
+ * @returns {string[]} problems, empty when valid
+ */
+function collectFooterNoteProblems(note) {
+  const problems = [];
+
+  if (note === undefined || note === null || note === "") {
+    return problems;
+  }
+
+  if (typeof note !== "string") {
+    problems.push("footerNote must be text");
+    return problems;
+  }
+
+  if (note.trim().length > MAX_FOOTER_NOTE) {
+    problems.push(`footerNote must be ${MAX_FOOTER_NOTE} characters or fewer`);
+  }
+
+  return problems;
+}
 
 /**
  * @param {unknown} list
@@ -113,7 +242,11 @@ function validateCompanyInput(company) {
   if (!company || typeof company !== "object") {
     throw validation("Company details are not valid.");
   }
-  const problems = collectAssuranceProblems(company.assurances);
+  const problems = [
+    ...collectAssuranceProblems(company.assurances),
+    ...collectSocialProblems(company.socialLinks),
+    ...collectFooterNoteProblems(company.footerNote),
+  ];
   if (problems.length > 0) {
     throw validation("Company details are not valid.", { fields: problems });
   }
@@ -123,6 +256,10 @@ function validateCompanyInput(company) {
 module.exports = {
   validateCompanyInput,
   collectAssuranceProblems,
+  collectSocialProblems,
+  collectFooterNoteProblems,
   ASSURANCE_ICONS,
   MAX_ASSURANCES,
+  MAX_SOCIAL_LINKS,
+  MAX_FOOTER_NOTE,
 };

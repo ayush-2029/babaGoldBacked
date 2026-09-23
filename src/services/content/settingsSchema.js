@@ -109,6 +109,24 @@ function collectProblems(settings) {
         "checkout.showAssurances must be true or false",
       );
     }
+
+    /*
+     * The single line under the cart total.
+     *
+     * Was hardcoded in the app as "BIS hallmarked · Final price confirmed
+     * before billing" — a claim about the shop's own goods, in the one place
+     * the shop could not change it. Empty means the line is not shown, which
+     * is the whole switch; there is no separate flag to get out of step with
+     * the text.
+     */
+    const note = settings.checkout?.cartNote;
+    if (note !== undefined && note !== null && note !== "") {
+      require_(typeof note === "string", "checkout.cartNote must be text");
+      require_(
+        typeof note !== "string" || note.trim().length <= 80,
+        "checkout.cartNote must be 80 characters or fewer",
+      );
+    }
   }
 
   problems.push(...checkAppUpdate(settings.appUpdate));
