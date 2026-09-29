@@ -237,6 +237,44 @@ function collectAssuranceProblems(list) {
   return problems;
 }
 
+/**
+ * The privacy policy link.
+ *
+ * Google Play requires one on the store listing AND inside the app, so the
+ * app shows it on Profile. It must be a real, openable address: a link with
+ * no scheme opens nothing, and a missing policy is a review rejection rather
+ * than a cosmetic fault.
+ */
+const MAX_POLICY_URL = 300;
+
+/**
+ * @param {unknown} url
+ * @returns {string[]} problems, empty when valid
+ */
+function collectPrivacyPolicyProblems(url) {
+  const problems = [];
+
+  if (url === undefined || url === null || url === "") {
+    // Absent is allowed here; the app simply shows no link. Play is what
+    // insists on one, not this validator.
+    return problems;
+  }
+
+  if (typeof url !== "string") {
+    problems.push("privacyPolicyUrl must be a web address");
+    return problems;
+  }
+
+  const trimmed = url.trim();
+  if (trimmed.length > MAX_POLICY_URL) {
+    problems.push(`privacyPolicyUrl must be ${MAX_POLICY_URL} characters or fewer`);
+  }
+  if (!/^https?:\/\/\S+$/i.test(trimmed)) {
+    problems.push("privacyPolicyUrl must start with https:// and contain no spaces");
+  }
+
+  return problems;
+}
 /** Write path: name the field so the admin can fix it. */
 function validateCompanyInput(company) {
   if (!company || typeof company !== "object") {
@@ -246,6 +284,7 @@ function validateCompanyInput(company) {
     ...collectAssuranceProblems(company.assurances),
     ...collectSocialProblems(company.socialLinks),
     ...collectFooterNoteProblems(company.footerNote),
+    ...collectPrivacyPolicyProblems(company.privacyPolicyUrl),
   ];
   if (problems.length > 0) {
     throw validation("Company details are not valid.", { fields: problems });
@@ -258,6 +297,7 @@ module.exports = {
   collectAssuranceProblems,
   collectSocialProblems,
   collectFooterNoteProblems,
+  collectPrivacyPolicyProblems,
   ASSURANCE_ICONS,
   MAX_ASSURANCES,
   MAX_SOCIAL_LINKS,
