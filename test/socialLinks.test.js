@@ -7,6 +7,7 @@ process.env.DATA_BUCKET = process.env.DATA_BUCKET || "baba-gold-in";
 const {
   collectSocialProblems,
   collectFooterNoteProblems,
+  collectPrivacyPolicyProblems,
   validateCompanyInput,
   MAX_SOCIAL_LINKS,
   MAX_FOOTER_NOTE,
@@ -159,5 +160,52 @@ describe("validateCompanyInput", () => {
   test("a document with none of these fields still passes", () => {
     const company = { companyName: "Baba Gold", tagline: "…" };
     assert.equal(validateCompanyInput(company), company);
+  });
+});
+
+/**
+ * The privacy policy link.
+ *
+ * Google Play requires one on the store listing AND inside the app, so the
+ * app shows it on Profile and the shop owns the address.
+ */
+describe("privacy policy URL", () => {
+  test("absent is allowed here — Play is what insists, not this validator", () => {
+    assert.deepEqual(collectPrivacyPolicyProblems(undefined), []);
+    assert.deepEqual(collectPrivacyPolicyProblems(null), []);
+    assert.deepEqual(collectPrivacyPolicyProblems(""), []);
+  });
+
+  test("accepts a real https address, trimmed", () => {
+    assert.deepEqual(
+      collectPrivacyPolicyProblems("  https://example.test/privacy.html  "),
+      [],
+    );
+  });
+
+  test("rejects one with no scheme, which would open nothing in the app", () => {
+    assert.match(
+      collectPrivacyPolicyProblems("babagold.com/privacy")[0],
+      /must start with https/,
+    );
+  });
+
+  test("rejects a space, the usual copy-paste fault", () => {
+    assert.equal(collectPrivacyPolicyProblems("https://x.test/a b").length, 1);
+  });
+
+  test("rejects a non-string", () => {
+    assert.match(collectPrivacyPolicyProblems(42)[0], /must be a web address/);
+  });
+
+  test("validateCompanyInput reports it alongside the other fields", () => {
+    try {
+      validateCompanyInput({ privacyPolicyUrl: "not-a-url" });
+      assert.fail("should have thrown");
+    } catch (error) {
+      assert.ok(
+        (error.details?.fields ?? []).some((f) => /privacyPolicyUrl/.test(f)),
+      );
+    }
   });
 });
