@@ -144,3 +144,64 @@ describe("profile.showVersion", () => {
     assert.match(collectProblems({ ...base(), profile: "yes" })[0], /must be an object/);
   });
 });
+
+/**
+ * "What happens next" — the numbered steps on the checkout screen.
+ *
+ * These describe what the shop will DO once a quote is sent, so only the shop
+ * can say whether they are still true.
+ */
+describe("checkout.steps and keptNote", () => {
+  const problemsFor = (checkout) => collectProblems(withCheckout(checkout));
+
+  test("absent is fine — the app keeps its own wording", () => {
+    assert.deepEqual(problemsFor({}), []);
+  });
+
+  test("an empty list is allowed — it removes the section", () => {
+    assert.deepEqual(problemsFor({ steps: [] }), []);
+  });
+
+  test("accepts the three the app used to hardcode", () => {
+    assert.deepEqual(
+      problemsFor({
+        steps: [
+          { title: "Press send in WhatsApp", body: "Nothing reaches the shop until you send it." },
+          { title: "We confirm availability" },
+          { title: "You receive the final quote", body: "Nothing is billed until you approve it." },
+        ],
+      }),
+      [],
+    );
+  });
+
+  test("a step needs a title", () => {
+    assert.match(problemsFor({ steps: [{ body: "no title" }] })[0], /title is required/);
+  });
+
+  test("a body is optional", () => {
+    assert.deepEqual(problemsFor({ steps: [{ title: "Just a title" }] }), []);
+  });
+
+  test("names the step that is wrong, so the admin can fix it", () => {
+    const problems = problemsFor({
+      steps: [{ title: "ok" }, { title: "x".repeat(51) }],
+    });
+    assert.ok(problems.some((p) => /checkout\.steps\[1\]\.title/.test(p)));
+  });
+
+  test("caps the count, since the app numbers them down one screen", () => {
+    const many = Array.from({ length: 6 }, (_, i) => ({ title: `Step ${i}` }));
+    assert.match(problemsFor({ steps: many })[0], /more than 5/);
+  });
+
+  test("rejects a step that is not an object", () => {
+    assert.match(problemsFor({ steps: ["just a string"] })[0], /must be an object/);
+  });
+
+  test("keptNote is optional and length-checked", () => {
+    assert.deepEqual(problemsFor({ keptNote: "" }), []);
+    assert.deepEqual(problemsFor({ keptNote: "Your pieces stay in the cart." }), []);
+    assert.match(problemsFor({ keptNote: "x".repeat(201) })[0], /200 characters or fewer/);
+  });
+});

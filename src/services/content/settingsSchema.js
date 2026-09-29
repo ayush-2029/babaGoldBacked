@@ -127,6 +127,59 @@ function collectProblems(settings) {
         "checkout.cartNote must be 80 characters or fewer",
       );
     }
+
+    /*
+     * "What happens next" — the numbered steps on the checkout screen.
+     *
+     * These describe what the shop will DO once a quote is sent, so only the
+     * shop can say whether they are still true. They were three fixed strings
+     * in the app. Absent means the app keeps its own wording, so nothing
+     * already in a bucket changes.
+     *
+     * The app numbers them itself; an empty list removes the section.
+     */
+    const steps = settings.checkout?.steps;
+    if (steps !== undefined && steps !== null) {
+      require_(Array.isArray(steps), "checkout.steps must be an array");
+      if (Array.isArray(steps)) {
+        require_(
+          steps.length <= 5,
+          "checkout.steps cannot have more than 5 steps",
+        );
+        steps.forEach((step, i) => {
+          const at = `checkout.steps[${i}]`;
+          if (!step || typeof step !== "object" || Array.isArray(step)) {
+            problems.push(`${at} must be an object`);
+            return;
+          }
+          require_(
+            typeof step.title === "string" && step.title.trim().length > 0,
+            `${at}.title is required`,
+          );
+          require_(
+            typeof step.title !== "string" || step.title.trim().length <= 50,
+            `${at}.title must be 50 characters or fewer`,
+          );
+          if (step.body !== undefined && step.body !== null && step.body !== "") {
+            require_(typeof step.body === "string", `${at}.body must be text`);
+            require_(
+              typeof step.body !== "string" || step.body.trim().length <= 160,
+              `${at}.body must be 160 characters or fewer`,
+            );
+          }
+        });
+      }
+    }
+
+    /* The paragraph under the steps. Empty removes it. */
+    const kept = settings.checkout?.keptNote;
+    if (kept !== undefined && kept !== null && kept !== "") {
+      require_(typeof kept === "string", "checkout.keptNote must be text");
+      require_(
+        typeof kept !== "string" || kept.trim().length <= 200,
+        "checkout.keptNote must be 200 characters or fewer",
+      );
+    }
   }
 
   /*
