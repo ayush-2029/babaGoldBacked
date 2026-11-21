@@ -6,6 +6,7 @@ const {
 } = require("../../repositories/jsonRepository");
 const { ApiError } = require("../../utils/errors");
 const { normalizeStoredMedia } = require("../media/mediaService");
+const { deleteOwnMedia } = require("../media/mediaCleanup");
 const {
   validateCategory,
   validateProduct,
@@ -146,7 +147,7 @@ async function updateCategory(categoryId, input, ifMatch, { partial }) {
  * with it. A hard delete is refused while it still holds products.
  */
 async function deleteCategory(categoryId, ifMatch, { hard = false } = {}) {
-  return mutate(ifMatch, (catalog) => {
+  const result = await mutate(ifMatch, (catalog) => {
     const category = findCategory(catalog, categoryId);
     if (!hard) {
       category.active = false;
@@ -161,6 +162,11 @@ async function deleteCategory(categoryId, ifMatch, { hard = false } = {}) {
     catalog.categories = catalog.categories.filter((c) => c.id !== categoryId);
     return { id: categoryId, deleted: true };
   });
+  // Only once the catalogue write has landed — see mediaCleanup.
+  if (result.data.deleted) {
+    result.data.media = await deleteOwnMedia("category", categoryId);
+  }
+  return result;
 }
 
 /** One write for a whole drag-and-drop reorder, instead of one per row. */
@@ -264,16 +270,21 @@ async function updateProduct(productId, input, ifMatch, { partial }) {
 }
 
 async function deleteProduct(productId, ifMatch, { hard = false } = {}) {
-  return mutate(ifMatch, (catalog) => {
+  const result = await mutate(ifMatch, (catalog) => {
     const { category, product, index } = findProduct(catalog, productId);
     if (!hard) {
       product.active = false;
       return { id: productId, active: false, deleted: false };
     }
     category.products.splice(index, 1);
-    // The caller is responsible for media/products/{id}/ — see mediaService.
     return { id: productId, deleted: true };
   });
+  // media/products/{id}/ goes too (API_CONTRACT.md), but only after the
+  // catalogue write has landed, so a refused write never loses images.
+  if (result.data.deleted) {
+    result.data.media = await deleteOwnMedia("product", productId);
+  }
+  return result;
 }
 
 async function reorderProducts(categoryId, input, ifMatch) {
