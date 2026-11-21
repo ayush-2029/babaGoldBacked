@@ -281,7 +281,7 @@ no `/login` or `/password` endpoints here.
 | POST | `/api/v1/admin/categories` | ID is client-supplied and stable (`"rings"`), validated `^[a-z0-9-]{2,40}$`, `409 DUPLICATE_ID` on collision |
 | PUT | `/api/v1/admin/categories/:id` | Full replace |
 | PATCH | `/api/v1/admin/categories/:id` | Partial — the `active` toggle lives here |
-| DELETE | `/api/v1/admin/categories/:id` | **Soft** (`active: false`). `?hard=true` only when empty, else `409 CATEGORY_NOT_EMPTY` |
+| DELETE | `/api/v1/admin/categories/:id` | **Soft** (`active: false`). `?hard=true` only when empty, else `409 CATEGORY_NOT_EMPTY`; also deletes `media/categories/{id}/` |
 | PUT | `/api/v1/admin/categories/order` | Bulk reorder, body `{ ids: [...] }` — one write instead of N |
 
 ### Products
@@ -293,7 +293,7 @@ no `/login` or `/password` endpoints here.
 | POST | `/api/v1/admin/products` | Body carries `categoryId`; the product is nested under it in storage |
 | PUT | `/api/v1/admin/products/:id` | Full replace |
 | PATCH | `/api/v1/admin/products/:id` | Partial — `active`, `available`, price edits |
-| DELETE | `/api/v1/admin/products/:id` | Soft. `?hard=true` also deletes `media/products/{id}/` |
+| DELETE | `/api/v1/admin/products/:id` | Soft. `?hard=true` also deletes `media/products/{id}/` — after the catalogue write succeeds, skipping any file another document still references. Response carries `media: { deleted, kept, skipped? }`; a cleanup failure never fails the request |
 | PUT | `/api/v1/admin/categories/:categoryId/products/order` | Reorder within a category |
 | PATCH | `/api/v1/admin/products/:id/category` | Move between categories. Separate endpoint because it relocates the node in `catalog.json` — and note **no image work is needed**, which is exactly why the media path has no `categoryId` segment |
 
